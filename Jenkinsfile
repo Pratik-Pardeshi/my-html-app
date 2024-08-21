@@ -20,7 +20,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 echo 'Building Docker image...'
-                sh 'docker build -t ${REGISTRY}/${DOCKER_IMAGE} .'
+                sh 'sudo docker build -t ${REGISTRY}/${DOCKER_IMAGE} .'
             }
         }
 
@@ -28,8 +28,8 @@ pipeline {
             steps {
                 echo 'Pushing Docker image to registry...'
                 sh '''
-                docker tag ${REGISTRY}/${DOCKER_IMAGE} ${REGISTRY}/${DOCKER_IMAGE}
-                docker push ${REGISTRY}/${DOCKER_IMAGE}
+                sudo docker tag ${REGISTRY}/${DOCKER_IMAGE} ${REGISTRY}/${DOCKER_IMAGE}
+                sudo docker push ${REGISTRY}/${DOCKER_IMAGE}
                 '''
             }
         }
@@ -39,10 +39,10 @@ pipeline {
                 echo 'Deploying application...'
                 sh '''
                 ssh ${SSH_USER}@${DEPLOY_SERVER} "
-                    docker pull ${REGISTRY}/${DOCKER_IMAGE} &&
-                    docker stop ${APP_NAME} || true &&
-                    docker rm ${APP_NAME} || true &&
-                    docker run -d --name ${APP_NAME} -p 80:80 ${REGISTRY}/${DOCKER_IMAGE}
+                    sudo docker pull ${REGISTRY}/${DOCKER_IMAGE} &&
+                    sudo docker stop ${APP_NAME} || true &&
+                    sudo docker rm ${APP_NAME} || true &&
+                    sudo docker run -d --name ${APP_NAME} -p 80:80 ${REGISTRY}/${DOCKER_IMAGE}
                 "
                 '''
             }
@@ -52,7 +52,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            sh 'docker image prune -f'
+            sh 'sudo docker image prune -f'
         }
         success {
             echo 'Pipeline completed successfully.'

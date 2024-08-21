@@ -12,6 +12,7 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 echo 'Checking out code from GitHub...'
+                // Ensure you have proper credentials and Git configuration
                 checkout scm
             }
         }
@@ -25,7 +26,7 @@ pipeline {
                         # Log in to Docker Hub
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-                        # Build the Docker image
+                        # Build the Docker image using the Dockerfile from GitHub
                         docker build -t ${REGISTRY}/${DOCKER_IMAGE} .
                         '''
                     }

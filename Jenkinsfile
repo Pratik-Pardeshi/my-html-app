@@ -4,8 +4,8 @@ pipeline {
     environment {
         APP_NAME = 'my-html-app'
         DOCKER_IMAGE = "${APP_NAME}:${env.BUILD_ID}"
-        REGISTRY = 'docker.io/pratikp02'  // Replace with your Docker registry
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'  // Replace with Jenkins credentials ID
+        REGISTRY = 'docker.io/pratikp02'
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
 
     stages {
@@ -21,8 +21,8 @@ pipeline {
                 echo 'Building Docker image...'
                 withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker build -t ${REGISTRY}/${DOCKER_IMAGE} .
+                    echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
+                    sudo docker build -t ${REGISTRY}/${DOCKER_IMAGE} .
                     '''
                 }
             }
@@ -33,8 +33,8 @@ pipeline {
                 echo 'Pushing Docker image to registry...'
                 withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push ${REGISTRY}/${DOCKER_IMAGE}
+                    echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
+                    sudo docker push ${REGISTRY}/${DOCKER_IMAGE}
                     '''
                 }
             }
@@ -44,7 +44,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            sh 'docker image prune -f'
+            sh 'sudo docker image prune -f'
         }
         success {
             echo 'Pipeline completed successfully.'

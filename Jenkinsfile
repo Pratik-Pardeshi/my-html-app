@@ -22,9 +22,6 @@ pipeline {
                     echo 'Building Docker image...'
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh '''
-                        # Ensure Docker service is running
-                        sudo systemctl start docker
-
                         # Log in to Docker Hub
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 

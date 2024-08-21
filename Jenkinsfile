@@ -19,7 +19,7 @@ pipeline {
                         sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                         # Build Docker image
-                        docker build -t docker.io/pratikp02/my-html-app:${env.BUILD_ID} .
+                        docker build -t docker.io/pratikp02/my-html-app:${BUILD_ID} .
                         '''
                     }
                 }
@@ -34,7 +34,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push docker.io/pratikp02/my-html-app:${env.BUILD_ID}
+                        docker push docker.io/pratikp02/my-html-app:${BUILD_ID}
                         '''
                     }
                 }
@@ -45,14 +45,14 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying application...'
-                    // Assuming deployment on a local Docker host; adjust for your environment
+                    // Deploy the Docker container
                     sh '''
                     # Stop and remove the old container if it exists
                     docker stop my-html-app || true
                     docker rm my-html-app || true
 
                     # Run the new container
-                    docker run -d --name my-html-app -p 80:80 docker.io/pratikp02/my-html-app:${env.BUILD_ID}
+                    docker run -d --name my-html-app -p 80:80 docker.io/pratikp02/my-html-app:${BUILD_ID}
                     '''
                 }
             }

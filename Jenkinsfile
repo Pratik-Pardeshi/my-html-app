@@ -18,16 +18,17 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                echo 'Building Docker image...'
-                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    script {
-                        // Log in to Docker Hub
+                script {
+                    echo 'Building Docker image...'
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh '''
+                        # Ensure Docker service is running
+                        sudo systemctl start docker
+
+                        # Log in to Docker Hub
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        '''
-                        
-                        // Build the Docker image
-                        sh '''
+
+                        # Build the Docker image
                         docker build -t ${REGISTRY}/${DOCKER_IMAGE} .
                         '''
                     }
@@ -37,16 +38,14 @@ pipeline {
 
         stage('Docker Push') {
             steps {
-                echo 'Pushing Docker image to registry...'
-                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    script {
-                        // Log in to Docker Hub
+                script {
+                    echo 'Pushing Docker image to registry...'
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh '''
+                        # Log in to Docker Hub
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        '''
-                        
-                        // Push the Docker image to the registry
-                        sh '''
+
+                        # Push the Docker image to the registry
                         docker push ${REGISTRY}/${DOCKER_IMAGE}
                         '''
                     }
@@ -56,10 +55,13 @@ pipeline {
 
         stage('Cleanup') {
             steps {
-                echo 'Cleaning up Docker images...'
-                sh '''
-                docker image prune -f
-                '''
+                script {
+                    echo 'Cleaning up Docker images...'
+                    sh '''
+                    # Remove unused Docker images
+                    docker image prune -f
+                    '''
+                }
             }
         }
     }

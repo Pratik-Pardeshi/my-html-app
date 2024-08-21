@@ -1,11 +1,10 @@
-# Use the official Nginx image as the base
+# Use an official Nginx image as a base image
 FROM nginx:alpine
 
-# Copy your static files to the Nginx web root
-COPY . /usr/share/nginx/html
+# Copy static files into the container
+COPY index.html /usr/share/nginx/html/
+COPY styles.css /usr/share/nginx/html/
+COPY app.js /usr/share/nginx/html/
 
-# Expose port 80
+# Expose port 80 for the application
 EXPOSE 80
-
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]

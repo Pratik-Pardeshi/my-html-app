@@ -4,7 +4,7 @@ pipeline {
     environment {
         APP_NAME = 'my-html-app'
         DOCKER_IMAGE = "${APP_NAME}:${env.BUILD_ID}"
-        REGISTRY = 'pratikp02'  // or use your ECR/Private registry URL
+        REGISTRY = 'docker.io/pratikp02'
         DEPLOY_SERVER = '65.0.107.37'  // Replace with your server IP or hostname
         SSH_USER = 'user'  // Replace with your SSH username
     }
@@ -26,11 +26,14 @@ pipeline {
 
         stage('Docker Push') {
             steps {
-                echo 'Pushing Docker image to registry...'
-                sh '''
-                sudo docker tag ${REGISTRY}/${DOCKER_IMAGE} ${REGISTRY}/${DOCKER_IMAGE}
-                sudo docker push ${REGISTRY}/${DOCKER_IMAGE}
-                '''
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    echo 'Logging in to Docker Hub...'
+                    sh '''
+                    echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
+                    sudo docker tag ${REGISTRY}/${DOCKER_IMAGE} ${REGISTRY}/${DOCKER_IMAGE}
+                    sudo docker push ${REGISTRY}/${DOCKER_IMAGE}
+                    '''
+                }
             }
         }
 

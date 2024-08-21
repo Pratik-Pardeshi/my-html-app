@@ -1,18 +1,11 @@
 pipeline {
     agent any
 
-    environment {
-        APP_NAME = 'my-html-app'
-        DOCKER_IMAGE = "${APP_NAME}:${env.BUILD_ID}"
-        REGISTRY = 'docker.io/pratikp02'
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-    }
-
     stages {
         stage('Checkout Code') {
             steps {
                 echo 'Checking out code from GitHub...'
-                // Ensure you have proper credentials and Git configuration
+                // Check out code from GitHub
                 checkout scm
             }
         }
@@ -21,13 +14,12 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image...'
-                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    // Log in to Docker Hub
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh '''
-                        # Log in to Docker Hub
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-
-                        # Build the Docker image using the Dockerfile from GitHub
-                        docker build -t ${REGISTRY}/${DOCKER_IMAGE} .
+                        # Build Docker image
+                        docker build -t docker.io/pratikp02/my-html-app:${env.BUILD_ID} .
                         '''
                     }
                 }
@@ -37,27 +29,30 @@ pipeline {
         stage('Docker Push') {
             steps {
                 script {
-                    echo 'Pushing Docker image to registry...'
-                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    echo 'Pushing Docker image to Docker Hub...'
+                    // Push Docker image to Docker Hub
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh '''
-                        # Log in to Docker Hub
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-
-                        # Push the Docker image to the registry
-                        docker push ${REGISTRY}/${DOCKER_IMAGE}
+                        docker push docker.io/pratikp02/my-html-app:${env.BUILD_ID}
                         '''
                     }
                 }
             }
         }
 
-        stage('Cleanup') {
+        stage('Deploy Application') {
             steps {
                 script {
-                    echo 'Cleaning up Docker images...'
+                    echo 'Deploying application...'
+                    // Assuming deployment on a local Docker host; adjust for your environment
                     sh '''
-                    # Remove unused Docker images
-                    docker image prune -f
+                    # Stop and remove the old container if it exists
+                    docker stop my-html-app || true
+                    docker rm my-html-app || true
+
+                    # Run the new container
+                    docker run -d --name my-html-app -p 80:80 docker.io/pratikp02/my-html-app:${env.BUILD_ID}
                     '''
                 }
             }

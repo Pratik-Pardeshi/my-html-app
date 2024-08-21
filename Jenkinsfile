@@ -20,10 +20,17 @@ pipeline {
             steps {
                 echo 'Building Docker image...'
                 withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                    echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
-                    sudo docker build -t ${REGISTRY}/${DOCKER_IMAGE} .
-                    '''
+                    script {
+                        // Log in to Docker Hub
+                        sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        '''
+                        
+                        // Build the Docker image
+                        sh '''
+                        docker build -t ${REGISTRY}/${DOCKER_IMAGE} .
+                        '''
+                    }
                 }
             }
         }
@@ -32,19 +39,34 @@ pipeline {
             steps {
                 echo 'Pushing Docker image to registry...'
                 withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                    echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
-                    sudo docker push ${REGISTRY}/${DOCKER_IMAGE}
-                    '''
+                    script {
+                        // Log in to Docker Hub
+                        sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        '''
+                        
+                        // Push the Docker image to the registry
+                        sh '''
+                        docker push ${REGISTRY}/${DOCKER_IMAGE}
+                        '''
+                    }
                 }
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                echo 'Cleaning up Docker images...'
+                sh '''
+                docker image prune -f
+                '''
             }
         }
     }
 
     post {
         always {
-            echo 'Cleaning up...'
-            sh 'sudo docker image prune -f'
+            echo 'Pipeline completed.'
         }
         success {
             echo 'Pipeline completed successfully.'

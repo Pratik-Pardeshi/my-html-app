@@ -6,7 +6,7 @@ pipeline {
         DOCKER_IMAGE = "${APP_NAME}:${env.BUILD_ID}"
         REGISTRY = 'docker.io/pratikp02'
         DEPLOY_SERVER = '65.0.107.37'  // Replace with your server IP or hostname
-        SSH_USER = 'user'  // Replace with your SSH username
+        SSH_USER = 'ec2-user'  // Replace with your SSH username
     }
 
     stages {
